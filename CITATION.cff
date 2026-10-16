@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+title: Explainable Machine Learning-Based Malicious DNS Traffic Detection System
+message: If you use this software, please cite it and the CIC-Bell-DNS-EXF-2021 dataset.
+authors:
+  - family-names: Utkar
+    given-names: Piyush
+type: software
+license: MIT
+repository-code: https://github.com/USERNAME/malicious-dns-ml-detector
+preferred-citation:
+  type: proceedings
+  title: Lightweight Hybrid Detection of Data Exfiltration using DNS based on Machine Learning
+  authors:
+    - family-names: Mahdavifar
+      given-names: Samaneh
+    - family-names: Salem
+      given-names: Amgad Hanafy
+    - family-names: Victor
+      given-names: Princy
+    - family-names: Garzon
+      given-names: Miguel
+    - family-names: Razavi
+      given-names: Amir H.
+    - family-names: Hellberg
+      given-names: Natasha
+    - family-names: Lashkari
+      given-names: Arash Habibi
+  conference:
+    name: The 11th IEEE International Conference on Communication and Network Security (ICCNS)
+    year: 2021
+  notes: Dataset CIC-Bell-DNS-EXF-2021, https://www.unb.ca/cic/datasets/dns-exf-2021.html

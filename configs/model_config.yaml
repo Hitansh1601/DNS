@@ -1,0 +1,100 @@
+random_state: 42
+test_size: 0.2
+val_size: 0.15  # fraction of train for validation during tuning
+stratify: true
+
+# Target discovery. Do NOT assume a name. First existing column in this list wins,
+# otherwise auto-detect low-cardinality object column. Override with target: "<name>".
+target_candidates:
+  - label
+  - class
+  - category
+  - attack
+  - Label
+  - Class
+  - target
+target: null
+
+# Label normalization: lower -> canonical
+# Binary: benign vs attack (light+heavy merged)
+# Multiclass: benign / light / heavy  (only if source labels support it)
+binary_map:
+  benign: 0
+  normal: 0
+  light_attack: 1
+  heavy_attack: 1
+  attack: 1
+  malicious: 1
+  exfiltration: 1
+multiclass_map:
+  benign: 0
+  normal: 0
+  light_attack: 1
+  light: 1
+  heavy_attack: 2
+  heavy: 2
+  attack: 1
+
+# Columns that are never features (exact match, case-insensitive handled in code)
+drop_exact:
+  - timestamp
+  - time
+  - datetime
+
+# Regex patterns for suspected leakage / environment-specific identifiers.
+# Flagged, reported, and optionally dropped (see ablation flag).
+leakage_patterns:
+  - ".*ip.*"
+  - ".*src.*"
+  - ".*dst.*"
+  - ".*domain.*"
+  - ".*fqdn.*"
+  - ".*host.*"
+  - ".*session.*"
+  - ".*capture.*"
+  - ".*pcap.*"
+  - ".*timestamp.*"
+  - "^id$"
+  - ".*_id$"
+
+# If true, drop leakage-pattern columns for the main model and run with/without ablation.
+drop_leakage_columns: true
+ablation_leakage: true
+
+models:
+  logreg:
+    max_iter: 1000
+    class_weight: balanced
+    C: 1.0
+  rf:
+    n_estimators: 200
+    max_depth: null
+    min_samples_split: 2
+    class_weight: balanced_subsample
+    n_jobs: -1
+  xgb:
+    n_estimators: 300
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.0
+    reg_lambda: 1.0
+    n_jobs: -1
+    tree_method: hist
+
+tuning:
+  enabled: true
+  cv: 3
+  n_iter: 12  # randomized search iterations for RF/XGB
+
+shap:
+  background_sample: 200
+  explain_sample: 500
+
+paths:
+  synthetic_csv: data/synthetic_dns_demo.csv
+  pipeline_binary: models/pipeline_binary.joblib
+  pipeline_multiclass: models/pipeline_multiclass.joblib
+  metrics_json: reports/metrics.json
+  figures_dir: reports/figures

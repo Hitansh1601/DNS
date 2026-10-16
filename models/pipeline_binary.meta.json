@@ -1,0 +1,85 @@
+{
+  "feature_names": [
+    "rr_count",
+    "rr_name_length",
+    "rr_name_entropy",
+    "distinct_ns",
+    "a_records",
+    "unique_country",
+    "unique_asn",
+    "ttl_mean",
+    "ttl_variance",
+    "upper",
+    "lower",
+    "numeric",
+    "entropy",
+    "special",
+    "labels",
+    "labels_max",
+    "labels_average",
+    "len",
+    "rr_type",
+    "sld",
+    "longest_word",
+    "reverse_dns"
+  ],
+  "label_classes": [
+    "benign",
+    "attack"
+  ],
+  "task": "binary",
+  "metrics": {
+    "accuracy": 0.999,
+    "balanced_accuracy": 0.999,
+    "confusion_matrix": [
+      [
+        499,
+        1
+      ],
+      [
+        0,
+        500
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 1.0,
+        "recall": 0.998,
+        "f1-score": 0.998998998998999,
+        "support": 500.0
+      },
+      "1": {
+        "precision": 0.998003992015968,
+        "recall": 1.0,
+        "f1-score": 0.999000999000999,
+        "support": 500.0
+      },
+      "accuracy": 0.999,
+      "macro avg": {
+        "precision": 0.999001996007984,
+        "recall": 0.999,
+        "f1-score": 0.998999998999999,
+        "support": 1000.0
+      },
+      "weighted avg": {
+        "precision": 0.999001996007984,
+        "recall": 0.999,
+        "f1-score": 0.998999998999999,
+        "support": 1000.0
+      }
+    },
+    "precision": 0.998003992015968,
+    "recall": 1.0,
+    "f1": 0.999000999000999,
+    "tn": 499,
+    "fp": 1,
+    "fn": 0,
+    "tp": 500,
+    "fpr": 0.002,
+    "fnr": 0.0,
+    "roc_auc": 0.999996,
+    "pr_auc": 0.999996007984032,
+    "train_seconds": 0.1808321475982666,
+    "infer_seconds_per_row": 3.950119018554688e-06
+  }
+}

@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Data - never commit real or large datasets
+data/*.csv
+data/*.zip
+data/*.gz
+data/*.pcap
+data/*.parquet
+!data/README.md
+!data/synthetic_dns_demo.csv
+*.pcap
+*.pcapng
+
+# Models - large artifacts (keep small demo pipeline if desired, ignore rest)
+models/*.joblib
+models/*.pkl
+!models/README.md
+
+# Reports
+reports/figures/*.png
+!reports/figures/.gitkeep
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Streamlit / sqlite history
+*.db
+*.sqlite
+*.sqlite3
+app/*.db
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+.pytest_cache/
