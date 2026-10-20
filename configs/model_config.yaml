@@ -42,20 +42,27 @@ drop_exact:
   - datetime
 
 # Regex patterns for suspected leakage / environment-specific identifiers.
-# Flagged, reported, and optionally dropped (see ablation flag).
+# IMPORTANT: only match true identifiers (IPs, sessions, timestamps), NOT
+# aggregated DNS features like distinct_ip / distinct_domains / FQDN_count
+# which are legitimate model inputs. Use anchored exact names for those.
 leakage_patterns:
-  - ".*ip.*"
-  - ".*src.*"
-  - ".*dst.*"
-  - ".*domain.*"
-  - ".*fqdn.*"
-  - ".*host.*"
+  - "^src_ip$"
+  - "^dst_ip$"
+  - "^srcip$"
+  - "^dstip$"
+  - "^client_ip$"
+  - "^server_ip$"
+  - ".*\\bsrc\\b.*"
+  - ".*\\bdst\\b.*"
   - ".*session.*"
   - ".*capture.*"
   - ".*pcap.*"
   - ".*timestamp.*"
   - "^id$"
   - ".*_id$"
+  - "^host$"
+  - "^domain$"
+  - "^fqdn$"
 
 # If true, drop leakage-pattern columns for the main model and run with/without ablation.
 drop_leakage_columns: true
@@ -80,13 +87,30 @@ models:
     colsample_bytree: 0.8
     reg_alpha: 0.0
     reg_lambda: 1.0
-    n_jobs: -1
+    n_jobs: 1
     tree_method: hist
 
 tuning:
   enabled: true
   cv: 3
   n_iter: 12  # randomized search iterations for RF/XGB
+  # Small search spaces (kept cheap for student hardware; expand for real CIC run)
+  rf_grid:
+    n_estimators: [100, 200]
+    max_depth: [null, 12, 20]
+    min_samples_split: [2, 5]
+  xgb_grid:
+    n_estimators: [200, 300]
+    max_depth: [4, 6]
+    learning_rate: [0.03, 0.05, 0.1]
+    subsample: [0.8, 1.0]
+
+cv:
+  folds: 3  # stratified K-fold on train split only (test never touched)
+
+threshold:
+  # Security tradeoff: report F1-optimal threshold in addition to default 0.5
+  tune_binary_threshold: true
 
 shap:
   background_sample: 200

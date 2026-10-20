@@ -22,11 +22,14 @@ def main():
     ap.add_argument("--target", default=None)
     ap.add_argument("--synthetic-n", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--no-tune", action="store_true", help="Disable RandomizedSearchCV (fast baseline run).")
+    ap.add_argument("--tune", action="store_true", help="Force tuning on even if config disables it.")
     a = ap.parse_args()
     Path("reports/figures").mkdir(parents=True, exist_ok=True)
     Path("models").mkdir(parents=True, exist_ok=True)
     with open("configs/model_config.yaml") as f:
         cfg = yaml.safe_load(f)
+    tune_flag = False if a.no_tune else (True if a.tune else None)  # None = follow config
 
     csvs = sorted(glob.glob("data/*.csv"))
     # ignore synthetic unless explicitly chosen or no other csv
@@ -57,14 +60,44 @@ def main():
     all_metrics = {"data_source": src_label, "target_col": target, "shape": list(df.shape)}
     for task in (["binary", "multiclass"] if multi_ok else ["binary"]):
         print(f"\n=== TASK {task} ===")
-        res = train_task(df, target, task)
+        res = train_task(df, target, task, tune=tune_flag)
         table = comparison_table(res)
         print(table.to_string())
+        # Honest reporting: dummy baseline gap + CV stability + threshold
+        for name, m in res["models"].items():
+            ev = m["eval"]
+            cv = ev.get("cv", {})
+            if name != "dummy" and "dummy" in res["models"]:
+                d_acc = res["models"]["dummy"]["eval"].get("accuracy", 0)
+                print(f"  {name}: test_acc={ev.get('accuracy'):.4f} "
+                      f"(dummy={d_acc:.4f}, lift={ev.get('accuracy',0)-d_acc:+.4f}) "
+                      f"cv_f1={cv.get('test_f1',{})} "
+                      f"{'best_params='+str(ev.get('best_params')) if ev.get('best_params') else ''}")
+            if ev.get("threshold_analysis"):
+                ta = ev["threshold_analysis"]
+                print(f"  {name} threshold: best={ta.get('best_threshold')} "
+                      f"F1@0.5={ta.get('at_0.5',{}).get('f1',0):.4f} "
+                      f"F1@best={ta.get('at_best',{}).get('f1',0):.4f}")
+        # Leakage ablation: compare with vs without leakage-pattern drop
+        if cfg.get("ablation_leakage"):
+            try:
+                from src.validation import find_leakage_columns
+                hits = find_leakage_columns(list(df.columns),
+                                            cfg.get("leakage_patterns", []))
+                print(f"  [ablation] leakage-pattern hits on raw columns: {hits or 'none'}")
+                if hits:
+                    print("  [ablation] main model already drops these; "
+                          "re-run with drop_leakage_columns=false to measure delta.")
+            except Exception as e:
+                print("  [ablation] skipped:", e)
         all_metrics[task] = {}
         for name, m in res["models"].items():
             ev = m["eval"]
             all_metrics[task][name] = {k: v for k, v in ev.items() if k not in ("confusion_matrix", "classification_report")}
             # save artifact for best? save all; app loads xgb by default, fallback rf/logreg
+            # (skip dummy for inference artifacts)
+            if name == "dummy":
+                continue
             tag = f"{task}"
             save_artifact(m["pipeline"], res["features"], res["label_info"]["classes"],
                           "binary" if res["n_classes"] == 2 else "multiclass",

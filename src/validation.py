@@ -18,7 +18,8 @@ def find_leakage_columns(columns: List[str], patterns: List[str]) -> Dict[str, s
     for c in columns:
         for pat in patterns:
             try:
-                if re.match(pat, c, flags=re.IGNORECASE):
+                # search (not match) so ".*x.*" and anchored "^x$" both behave correctly
+                if re.search(pat, c, flags=re.IGNORECASE):
                     hits[c] = pat
                     break
             except re.error:

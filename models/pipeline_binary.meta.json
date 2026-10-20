@@ -7,8 +7,12 @@
     "a_records",
     "unique_country",
     "unique_asn",
+    "distinct_ip",
+    "distinct_domains",
     "ttl_mean",
     "ttl_variance",
+    "FQDN_count",
+    "subdomain_length",
     "upper",
     "lower",
     "numeric",
@@ -21,6 +25,7 @@
     "rr_type",
     "sld",
     "longest_word",
+    "subdomain",
     "reverse_dns"
   ],
   "label_classes": [
@@ -79,7 +84,40 @@
     "fnr": 0.0,
     "roc_auc": 0.999996,
     "pr_auc": 0.999996007984032,
-    "train_seconds": 0.1808321475982666,
-    "infer_seconds_per_row": 3.950119018554688e-06
+    "train_seconds": 1.2616808414459229,
+    "infer_seconds_per_row": 7.360410690307618e-05,
+    "cv": {
+      "test_acc": {
+        "mean": 0.9962499995313671,
+        "std": 0.001225051851261047
+      },
+      "test_bal_acc": {
+        "mean": 0.9962503733118426,
+        "std": 0.0012241332649582752
+      },
+      "test_f1": {
+        "mean": 0.9962453047521835,
+        "std": 0.0012268948092359511
+      }
+    },
+    "threshold_analysis": {
+      "best_threshold": 0.5689,
+      "at_0.5": {
+        "precision": 0.998003992015968,
+        "recall": 1.0,
+        "f1": 0.999000999000999
+      },
+      "at_best": {
+        "precision": 0.998003992015968,
+        "recall": 1.0,
+        "f1": 0.999000999000999,
+        "tn": 499,
+        "fp": 1,
+        "fn": 0,
+        "tp": 500,
+        "fpr": 0.002,
+        "fnr": 0.0
+      }
+    }
   }
 }

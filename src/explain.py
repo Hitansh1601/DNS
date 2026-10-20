@@ -42,6 +42,33 @@ def shap_global_local(pipeline, X_test: pd.DataFrame, feature_names=None,
             "X_sample": Xt, "Xe_shape": list(Xe.shape)}
 
 
+def permutation_fallback(pipeline, X_test: pd.DataFrame, y_test=None,
+                           n_repeats: int = 5, seed: int = 42) -> Dict:
+    """Model-agnostic fallback when SHAP is unavailable.
+
+    Permutation importance: shuffle each column, measure accuracy/F1 drop.
+    Slower but works for any model including LogReg/Dummy.
+    """
+    from sklearn.inspection import permutation_importance
+    from src.preprocessing import clean_frame
+    X_test = clean_frame(X_test)
+    if y_test is None:
+        try:
+            y_test = pipeline.predict(X_test)
+        except Exception as e:
+            return {"error": f"no y for permutation: {e}"}
+    try:
+        r = permutation_importance(pipeline, X_test, y_test,
+                                   n_repeats=n_repeats, random_state=seed, n_jobs=1)
+        names = list(X_test.columns)
+        imp = [(names[i], float(r.importances_mean[i])) for i in range(len(names))]
+        imp.sort(key=lambda x: x[1], reverse=True)
+        return {"method": "permutation", "importances": imp,
+                "std": [float(s) for s in r.importances_std]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def top_features(shap_values, feature_names, topk: int = 15) -> list:
     sv = np.asarray(shap_values)
     # binary: shape (n, f); multiclass: (n, f, c) or list
