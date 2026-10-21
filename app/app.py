@@ -1,7 +1,13 @@
 """DNS ThreatLens — Explainable DNS Traffic Detection (offline feature-CSV tool)."""
 from __future__ import annotations
+import sys
 import json, sqlite3
 from pathlib import Path
+# Ensure `import src.*` works when launched via `streamlit run app/app.py`
+# without requiring PYTHONPATH=. to be set manually.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 import joblib
 import pandas as pd
 import streamlit as st
@@ -19,23 +25,23 @@ def load_artifact(path: str):
         return None
 
 def load_metrics():
-    p = Path("reports/metrics.json")
+    p = ROOT / "reports" / "metrics.json"
     if p.exists():
         return json.loads(p.read_text())
     return {}
 
 def artifact_for(task: str):
-    for cand in [f"models/pipeline_{task}.joblib", f"models/pipeline_{task}_xgb.joblib",
-                 f"models/pipeline_binary.joblib"]:
-        a = load_artifact(cand)
+    for cand in [ROOT / f"models/pipeline_{task}.joblib", ROOT / f"models/pipeline_{task}_xgb.joblib",
+                 ROOT / "models/pipeline_binary.joblib"]:
+        a = load_artifact(str(cand))
         if a is not None:
-            return a, cand
+            return a, str(cand)
     return None, None
 
 # --- history (optional sqlite) ---
 def log_history(rows: pd.DataFrame, task: str):
     try:
-        con = sqlite3.connect("app/history.db")
+        con = sqlite3.connect(str(ROOT / "app" / "history.db"))
         rows.assign(task=task).to_sql("predictions", con, if_exists="append", index=False)
         con.close()
     except Exception as e:
@@ -82,8 +88,8 @@ elif page == "Analyze DNS records":
     f = st.file_uploader("Upload feature CSV", type=["csv"])
     demo = st.checkbox("Use synthetic demo file (data/synthetic_dns_demo.csv, clearly synthetic)")
     df = None
-    if demo and Path("data/synthetic_dns_demo.csv").exists():
-        df = pd.read_csv("data/synthetic_dns_demo.csv", nrows=500)
+    if demo and (ROOT / "data" / "synthetic_dns_demo.csv").exists():
+        df = pd.read_csv(ROOT / "data" / "synthetic_dns_demo.csv", nrows=500)
         st.info("Demo records — SYNTHETIC ONLY, not real detections.")
     elif f:
         df = pd.read_csv(f)
@@ -163,19 +169,19 @@ elif page == "Model evaluation":
     st.caption("Metrics below are from the saved offline test split, not from your uploads.")
     st.json(metrics)
     import glob
-    for img in sorted(glob.glob("reports/figures/cm_*.png")):
+    for img in sorted(glob.glob(str(ROOT / "reports" / "figures" / "cm_*.png"))):
         st.image(img, caption=img)
 
 else:
     st.title("Prediction history")
     if st.button("Clear history"):
         try:
-            Path("app/history.db").unlink(missing_ok=True)
+            (ROOT / "app" / "history.db").unlink(missing_ok=True)
             st.success("Cleared.")
         except Exception as e:
             st.error(str(e))
     try:
-        con = sqlite3.connect("app/history.db")
+        con = sqlite3.connect(str(ROOT / "app" / "history.db"))
         df = pd.read_sql("SELECT * FROM predictions ORDER BY rowid DESC LIMIT 500", con)
         con.close()
         st.dataframe(df)
